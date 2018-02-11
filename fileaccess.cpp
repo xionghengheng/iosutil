@@ -239,8 +239,30 @@ int FileAccess::copyFile(const char *from, const char *to, bool isfromdevice, bo
 		closefile(from_fd, isfromdevice);
 		return -1;
 	}
+    
+    //file size
+    afc_dictionary *file_info = nullptr;
+    char* key = nullptr;
+    char* val = nullptr;
+    int file_size = 0;
+    AFCFileInfoOpen(_afc, from, &file_info);
+    while(AFCKeyValueRead(file_info, &key, &val) == MDERR_OK)
+    {
+        if (strcmp("st_size", key) == 0)
+        {
+            file_size = atoi(val);
+            break;
+        }
+    }
+    
+    if (file_size == 0)
+    {
+        printf("file size is zero\n");
+        return 0;
+    }
+    
 	//FIXME: increase bufsize, in OS 10.10 AFCFileRefRead read the whole file data once
-	int bufsize = 1024 * 1024 * 10;
+    int bufsize = file_size + 1;//1024 * 1024 * 10;
 	char *buf = (char *)malloc(bufsize);
 	if (buf == NULL) {
 		closefile(to_fd, istodevice);
